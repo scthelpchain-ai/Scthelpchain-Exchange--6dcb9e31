@@ -245,4 +245,112 @@ module.exports = SCTExchangeVaultEngine;
             <!-- TOP NAVBAR -->
             <header class="h-16 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-6">
                 <h1 class="text-lg font-semibold">Overview & Analytics</h1>
-                <div class="fle
+        const express = require('express');
+const app = express();
+app.use(express.json());
+
+// In-Memory Database Simulation
+const betaUsers = [];
+const masterCards = [];
+
+// ==========================================
+// 1. BETA CONTACT REGISTRATION API
+// ==========================================
+app.post('/api/v1/beta/register', (req, res) => {
+    const { fullName, email, phone, interestArea } = req.body;
+
+    if (!fullName || !email) {
+        return res.status(400).json({ 
+            success: false, 
+            message: "Full name and email are required for Beta access." 
+        });
+    }
+
+    const betaApplicant = {
+        betaId: `BETA-${Date.now()}`,
+        fullName,
+        email,
+        phone: phone || null,
+        interestArea: interestArea || "AI Quran Tutor", // Default tracking module
+        status: "APPROVED",
+        registeredAt: new Date()
+    };
+
+    betaUsers.push(betaApplicant);
+
+    return res.status(201).json({
+        success: true,
+        message: "Successfully registered for SCT Beta program.",
+        data: betaApplicant
+    });
+});
+
+
+// ==========================================
+// 2. SCT MASTER CARD ISSUANCE API
+// ==========================================
+app.post('/api/v1/cards/issue', (req, res) => {
+    const { userId, cardHolderName, initialDepositUSD } = req.body;
+
+    if (!userId || !cardHolderName) {
+        return res.status(400).json({ 
+            success: false, 
+            message: "User ID and Cardholder Name are required." 
+        });
+    }
+
+    // Generate 16-digit Card Number & Security details
+    const cardNumber = "5412" + Math.floor(100000000000 + Math.random() * 900000000000);
+    const expiryDate = new Date();
+    expiryDate.setFullYear(expiryDate.getFullYear() + 3);
+
+    const newCard = {
+        cardId: `SCT-CARD-${Date.now()}`,
+        userId,
+        cardHolderName: cardHolderName.toUpperCase(),
+        cardNumber: cardNumber.replace(/(.{4})/g, '$1 ').trim(), // Formatted 16-digit string
+        cvv: Math.floor(100 + Math.random() * 900).toString(),
+        expiry: `${expiryDate.getMonth() + 1}/${expiryDate.getFullYear().toString().slice(-2)}`,
+        balanceUSD: parseFloat(initialDepositUSD) || 0.00,
+        cardStatus: "ACTIVE",
+        distributionStatus: "PENDING_DISPATCH",
+        issuedAt: new Date()
+    };
+
+    masterCards.push(newCard);
+
+    return res.status(201).json({
+        success: true,
+        message: "SCT MasterCard issued successfully.",
+        cardDetails: newCard
+    });
+});
+
+
+// ==========================================
+// 3. CARD DISTRIBUTION & TRACKING API
+// ==========================================
+app.patch('/api/v1/cards/distribute/:cardId', (req, res) => {
+    const { cardId } = req.params;
+    const { trackingNumber, deliveryAddress, status } = req.body;
+
+    const card = masterCards.find(c => c.cardId === cardId);
+
+    if (!card) {
+        return res.status(404).json({ success: false, message: "Card ID not found." });
+    }
+
+    card.distributionStatus = status || "DISPATCHED";
+    card.trackingNumber = trackingNumber || `TRK-${Math.floor(100000 + Math.random() * 900000)}`;
+    card.deliveryAddress = deliveryAddress || "Not Provided";
+    card.updatedAt = new Date();
+
+    return res.status(200).json({
+        success: true,
+        message: "Card distribution status updated.",
+        data: card
+    });
+});
+
+app.listen(5000, () => console.log('SCT Beta & Card Services active on port 5000'));
+        <div class="fle
